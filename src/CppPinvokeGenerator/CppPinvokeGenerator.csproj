@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <VersionPrefix>0.1.4</VersionPrefix>
     <PackageId>CppPinvokeGenerator</PackageId>
     <Description>CppPinvokeGenerator is a simple pinvoke generator based on CppAst to generate C# for C++</Description>
@@ -20,21 +19,17 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-
   <ItemGroup>
     <None Remove="Templates\CSharpGlobalClass.txt" />
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="Templates\CSharpGlobalClass.txt" />
     <EmbeddedResource Include="Templates\CSharpClass.txt" />
     <EmbeddedResource Include="Templates\CSharpHeader.txt" />
     <EmbeddedResource Include="Templates\CHeader.txt" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="CppAst" Version="0.5.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+    <PackageReference Include="CppAst" Version="0.20.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
   </ItemGroup>
-
 </Project>
