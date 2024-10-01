@@ -79,10 +79,11 @@ namespace CppPinvokeGenerator
                         apiFunctionWriter.Public();
                     else
                     {
-                        // TODO: convert to properties
-                        //apiFunctionWriter.Private();
-                        //csApiSb.AppendLine(propertyInfo.GenerateProperty().Tabify(2));
-                        apiFunctionWriter.Public();
+                        apiFunctionWriter.Private();
+                        if (!propertyInfo.WrittenToApi)
+                        {
+                            csApiSb.AppendLine(propertyInfo.GenerateProperty().Tabify(2));
+                        }
                     }
 
                     if (function.IsStatic() || cppClass.IsGlobal)

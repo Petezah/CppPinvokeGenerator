@@ -27,7 +27,7 @@ namespace CppPinvokeGenerator
                         pi.PropertyName = name.Remove(0, prefix.Length);
 
                         // looking for setter:
-                        CppFunction setter = functions.FirstOrDefault(sf => sf.Parameters.Count == 1 && mapper.RenameForApi(sf.Name, true).StartsWith("Set"));
+                        CppFunction setter = functions.FirstOrDefault(sf => sf.Parameters.Count == 1 && mapper.RenameForApi(sf.Name, true).Equals($"Set{pi.PropertyName}"));
                         if (setter != null && f.IsStatic() == setter.IsStatic() && !setter.IsConstructor)
                         {
                             pi.SetterFunction = setter;
@@ -55,11 +55,13 @@ namespace CppPinvokeGenerator
         public string PropertyName { get; set; }
         public string GettetApiName { get; set; }
         public string SetterApiName { get; set; }
+        public bool WrittenToApi { get; private set; } = false;
 
         public string GenerateProperty()
         {
             // TODO: use FunctionWriter here
             // TODO: comments
+            WrittenToApi = true;
             string type = _mapper.MapToManagedApiType(GetterFunction.ReturnType);
             string modifier = GetterFunction.IsStatic() ? "static " : "";
             if (SetterFunction == null)
