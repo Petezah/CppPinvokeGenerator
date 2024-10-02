@@ -178,6 +178,7 @@ namespace CppPinvokeGenerator
             type = type
                 .Split(new [] {"::"}, StringSplitOptions.RemoveEmptyEntries).Last()
                 .Replace("const ", "")
+                .Replace(" const", "")
                 .Replace("&", "");
 
             if (!keepPointer)
@@ -211,6 +212,17 @@ namespace CppPinvokeGenerator
                 name = name.Replace(item.Key, item.Value);
 
             return name.ToCamelCase();
+        }
+
+        // (nativeType, parameterName) => (nativeTypeOut, body)
+        public event Func<string, string, (string, string)> NativeParamMarshallingCode;
+
+        internal (string, string) GetNativeParamMarshallingCode(string nativeType, string paramterName)
+        {
+            nativeType = CleanType(nativeType);
+            if (NativeParamMarshallingCode != null)
+                return NativeParamMarshallingCode(nativeType, paramterName);
+            return (nativeType, string.Empty);
         }
 
         internal bool IsKnownNativeType(CppType nativeTtype)

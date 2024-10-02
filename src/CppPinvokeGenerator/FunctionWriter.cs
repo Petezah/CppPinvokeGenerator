@@ -9,6 +9,7 @@ namespace CppPinvokeGenerator
     public class FunctionWriter
     {
         private readonly StringBuilder _sb = new StringBuilder(200);
+        private readonly StringBuilder _bodyProlog = new StringBuilder(200);
         private bool _isVoid;
         private int _bodyCalls;
         private int _definedParametersCount;
@@ -113,11 +114,19 @@ namespace CppPinvokeGenerator
             return this;
         }
 
+        public FunctionWriter BodyAppendProlog(string code)
+        {
+            _bodyProlog.Append(code);
+            return this;
+        }
+
         public FunctionWriter BodyStart()
         {
             if (_definedParametersCount > 0 && !_baseCtor)
                 _sb.RemoveEnd(", ".Length);
             _sb.Append(") { ");
+
+            _sb.Append(_bodyProlog);
 
             if (!_isVoid)
                 _sb.Append("return ");
