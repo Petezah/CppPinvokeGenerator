@@ -10,6 +10,7 @@ namespace CppPinvokeGenerator
     {
         private readonly StringBuilder _sb = new StringBuilder(200);
         private readonly StringBuilder _bodyProlog = new StringBuilder(200);
+        private readonly StringBuilder _bodyEpilog = new StringBuilder(200);
         private bool _isVoid;
         private int _bodyCalls;
         private int _definedParametersCount;
@@ -120,16 +121,29 @@ namespace CppPinvokeGenerator
             return this;
         }
 
+        public FunctionWriter BodyAppendEpilog(string code)
+        {
+            _bodyEpilog.Append(code);
+            return this;
+        }
+
         public FunctionWriter BodyStart()
         {
             if (_definedParametersCount > 0 && !_baseCtor)
                 _sb.RemoveEnd(", ".Length);
             _sb.Append(") { ");
 
-            _sb.Append(_bodyProlog);
-
-            if (!_isVoid)
+            if (_bodyProlog.Length > 0)
+                _sb.Append(_bodyProlog);
+            else if (!_isVoid) // TODO: not sure if this is right
                 _sb.Append("return ");
+
+            return this;
+        }
+
+        public FunctionWriter BodyEnd()
+        {
+            _sb.Append(_bodyEpilog);
 
             return this;
         }
@@ -183,6 +197,7 @@ namespace CppPinvokeGenerator
                 _sb.Append(expression);
 
             _sb.Append(";");
+            _sb.Append(_bodyEpilog);
             if (!_expressionBodySyntax)
                 _sb.Append(" }");
             return _sb.ToString();

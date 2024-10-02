@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using CppAst;
 using CppPinvokeGenerator.Templates;
@@ -89,6 +91,7 @@ namespace CppPinvokeGenerator
                     if (function.IsStatic() || cppClass.IsGlobal)
                         apiFunctionWriter.Static();
 
+                    var returnTypeInfo = mapper.GetReturnTypeParamAddition(function.ReturnType.GetFullTypeName());
                     if (function.IsConstructor)
                     {
                         cfunctionWriter.ReturnType(cppClass.Class.GetFullTypeName() + "*", "EXPORTS", 32);
@@ -96,8 +99,10 @@ namespace CppPinvokeGenerator
                     }
                     else
                     {
-                        cfunctionWriter.ReturnType(function.ReturnType.GetFullTypeName(), "EXPORTS", 32);
-                        dllImportWriter.ReturnType(mapper.NativeToPinvokeType(function.ReturnType));
+                        var cReturnType = function.ReturnType.GetFullTypeName();
+                        cReturnType = returnTypeInfo.HasValue ? "void" : cReturnType; // in the case of a parameter adjustment, the return value is coming back in OUT parameters
+                        cfunctionWriter.ReturnType(cReturnType, "EXPORTS", 32);
+                        dllImportWriter.ReturnType(returnTypeInfo.HasValue ? "void" : mapper.NativeToPinvokeType(function.ReturnType)); // DLL import must match the C function
                         apiFunctionWriter.ReturnType(mapper.MapToManagedApiType(function.ReturnType));
                     }
 
@@ -130,9 +135,26 @@ namespace CppPinvokeGenerator
                             mapper.MapToManagedApiType(parameter.Type),
                             mapper.EscapeVariableName(parameter.Name));
                     }
+                    if (returnTypeInfo.HasValue)
+                    {
+                        // C function needs to handle the new parameters;
+                        // DLL importer needs to handle the new parameters
+                        // API signature stays the same; only its body gets adjusted (later)
+                        foreach (var param in returnTypeInfo.Value.Params)
+                        {
+                            cfunctionWriter.Parameter(param.Type, param.Name);
 
-                    // append "return" if needed
-                    cfunctionWriter.BodyStart();
+                            dllImportWriter.Parameter(
+                                param.PInvokeType ?? mapper.NativeToPinvokeType(param.Type),
+                                mapper.EscapeVariableName(param.Name));
+                        }
+                        cfunctionWriter.BodyAppendProlog(returnTypeInfo.Value.NativeProlog);
+                        cfunctionWriter.BodyAppendEpilog(returnTypeInfo.Value.NativeEpilog);
+                        apiFunctionWriter.BodyAppendProlog(returnTypeInfo.Value.ManagedProlog);
+                        apiFunctionWriter.BodyAppendEpilog(returnTypeInfo.Value.ManagedEpilog);
+                    }
+
+                    cfunctionWriter.BodyStart(); // append "return" if needed
 
                     if (cppClass.IsGlobal)
                     {
@@ -162,9 +184,10 @@ namespace CppPinvokeGenerator
                             .StartExpressionBody()
                             .BodyCallMethod("SetHandle");
                     }
+                    else if (returnTypeInfo.HasValue && returnTypeInfo.Value.HasManagedCode)
+                        apiFunctionWriter.BodyStart();
                     else
                         apiFunctionWriter.StartExpressionBody();
-
 
                     if (mapper.IsKnownNativeType(function.ReturnType))
                     {
@@ -202,6 +225,15 @@ namespace CppPinvokeGenerator
                         
                         apiFunctionWriter.PassParameter(escapedName);
                     }
+                    if (returnTypeInfo.HasValue)
+                    {
+                        // Adjust API body to handle additional parameters
+                        foreach (var param in returnTypeInfo.Value.Params)
+                        {
+                            string escapedName = mapper.EscapeVariableName(param.Name);
+                            apiFunctionWriter.PassParameter(escapedName);
+                        }
+                    }
 
                     if (function.ReturnType.IsBool())
                         csApiSb.AppendLine(apiFunctionWriter.Build(" > 0").Tabify(2)); // byte to bool
@@ -234,8 +266,8 @@ namespace CppPinvokeGenerator
                     cfunctionWriter.ReturnType("void", "EXPORTS", 32)
                         .MethodName(cppClass.Name + "__delete")
                         .Parameter(cppClass.Class.GetFullTypeName() + "*", "target")
-                        .BodyStart()
-                        .Body("delete target");
+                        .Body("delete target")
+                        .BodyStart();
                     cFileSb
                         .AppendLine(cfunctionWriter.Build());
                 }

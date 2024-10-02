@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using CppAst;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +15,24 @@ namespace CppPinvokeGenerator
         private readonly HashSet<string> _registeredTypes = new HashSet<string>();
         private readonly HashSet<string> _unsupportedTypes = new HashSet<string>();
         private readonly HashSet<string> _unsupportedMethods = new HashSet<string>();
+
+        public struct ReturnTypeParamAddition
+        {
+            public struct Param
+            {
+                public string Name;
+                public string Type;
+                public string PInvokeType;
+            }
+            public Param[] Params;
+            public string NativeProlog;
+            public string NativeEpilog;
+            public string ManagedProlog;
+            public string ManagedEpilog;
+            public bool HasManagedCode => !string.IsNullOrEmpty(ManagedProlog) || !string.IsNullOrEmpty(ManagedEpilog);
+        };
+        private readonly Dictionary<string, ReturnTypeParamAddition> _returnTypeParams = new Dictionary<string, ReturnTypeParamAddition>();
+
         private readonly Dictionary<string, string> _mappings = new Dictionary<string, string>
             {
                 // stdint.h types:
@@ -138,6 +157,12 @@ namespace CppPinvokeGenerator
                 _unsupportedMethods.Add(className + "." + methodName);
         }
 
+        public void RegisterReturnTypeParamAddition(string nativeType, ReturnTypeParamAddition additionInfo)
+        {
+            Logger.LogDebug($"RegisterMapping({nativeType}, {additionInfo})");
+            _returnTypeParams[nativeType] = additionInfo;
+        }
+
         internal bool IsMethodMarkedAsUnsupported(CppFunction function)
         {
             if (function.Parent is CppClass cppClass)
@@ -148,6 +173,11 @@ namespace CppPinvokeGenerator
         internal string NativeToPinvokeType(CppType nativeType)
         {
             string type = nativeType.GetDisplayName();
+            return NativeToPinvokeType(type);
+        }
+
+        internal string NativeToPinvokeType(string type)
+        {
             bool isPtr = type.Trim().EndsWith("*");
             type = CleanType(type);
 
@@ -258,6 +288,15 @@ namespace CppPinvokeGenerator
 
             cast = $"({MapToManagedApiType(nativeType)})";
             return true;
+        }
+
+        internal ReturnTypeParamAddition? GetReturnTypeParamAddition(string returnType)
+        {
+            if (_returnTypeParams.TryGetValue(returnType, out var info))
+            {
+                return info;
+            }
+            return null;
         }
     }
 }
