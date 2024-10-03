@@ -121,7 +121,7 @@ namespace CppPinvokeGenerator
 
                     foreach (var parameter in function.Parameters)
                     {
-                        var (nativeType, prolog) = mapper.GetNativeParamMarshallingCode(parameter.Type.GetDisplayName(), parameter.Name);
+                        var (nativeType, newNativeName, prolog) = mapper.GetNativeParamMarshallingCode(parameter.Type.GetDisplayName(), parameter.Name);
                         cfunctionWriter.BodyAppendProlog(prolog);
                         cfunctionWriter.Parameter(
                             nativeType,
@@ -207,7 +207,8 @@ namespace CppPinvokeGenerator
 
                     foreach (var parameter in function.Parameters)
                     {
-                        cfunctionWriter.PassParameter(parameter.Name);
+                        var (nativeType, newNativeName, prolog) = mapper.GetNativeParamMarshallingCode(parameter.Type.GetDisplayName(), parameter.Name);
+                        cfunctionWriter.PassParameter(string.IsNullOrEmpty(newNativeName) ? parameter.Name : newNativeName);
 
                         string dllImportType = mapper.NativeToPinvokeType(parameter.Type);
                         string escapedName = mapper.EscapeVariableName(parameter.Name);
