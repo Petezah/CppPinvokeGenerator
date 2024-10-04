@@ -267,8 +267,8 @@ namespace CppPinvokeGenerator
                     cfunctionWriter.ReturnType("void", "EXPORTS", 32)
                         .MethodName(cppClass.Name + "__delete")
                         .Parameter(cppClass.Class.GetFullTypeName() + "*", "target")
-                        .Body("delete target")
-                        .BodyStart();
+                        .BodyStart()
+                        .Body("delete target");
                     cFileSb
                         .AppendLine(cfunctionWriter.Build());
                 }
