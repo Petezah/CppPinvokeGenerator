@@ -6,8 +6,11 @@ namespace CppPinvokeGenerator.Templates
 {
     public class TemplateManager
     {
+        private static readonly string UnsafeClassString = "unsafe ";
+
         private string cHeader = "";
         private string csGlobalClass = "GlobalFunctions";
+        private string csClassUnsafeOrSafe = UnsafeClassString; // Preserve original default behavior
 
         public TemplateManager AddToCHeader(string content)
         {
@@ -21,6 +24,12 @@ namespace CppPinvokeGenerator.Templates
             return this;
         }
 
+        public TemplateManager SetClassesUnsafe(bool isUnsafe)
+        {
+            csClassUnsafeOrSafe = isUnsafe ? UnsafeClassString : string.Empty;
+            return this;
+        }
+
         public string CHeader() 
             => GetEmbeddedResource("CHeader.txt") + cHeader;
 
@@ -31,6 +40,7 @@ namespace CppPinvokeGenerator.Templates
 
         public string CSharpClass(string className, string nativeClassName, string dllImportsContent, string apiContent, string nativeLibraryPath)
             => GetEmbeddedResource("CSharpClass.txt")
+                .Replace("%CLASS_UNSAFE_SAFE%", csClassUnsafeOrSafe)
                 .Replace("%CLASS_NAME%", className)
                 .Replace("%CCLASS_NAME%", nativeClassName)
                 .Replace("%DLLIMPORTS%", dllImportsContent.Trim('\n', '\r'))
@@ -39,6 +49,7 @@ namespace CppPinvokeGenerator.Templates
 
         public string CSharpGlobalClass(string dllImportsContent, string apiContent, string nativeLibraryPath)
             => GetEmbeddedResource("CSharpGlobalClass.txt")
+                .Replace("%CLASS_UNSAFE_SAFE%", csClassUnsafeOrSafe)
                 .Replace("%CLASS_NAME%", csGlobalClass)
                 .Replace("%DLLIMPORTS%", dllImportsContent.Trim('\n', '\r'))
                 .Replace("%API%", apiContent.Trim('\n', '\r'))
