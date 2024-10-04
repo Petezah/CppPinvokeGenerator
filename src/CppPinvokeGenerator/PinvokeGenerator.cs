@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Runtime.InteropServices;
 using System.Text;
 using CppAst;
 using CppPinvokeGenerator.Templates;
@@ -16,7 +17,7 @@ namespace CppPinvokeGenerator
         private static readonly ILogger Logger = LoggerFactory.GetLogger<TypeMapper>();
 
         /// <param name="dllImportPath">will be used as the first argument in [DllImport]. Can be a path to some constant</param>
-        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, string dllImportPath, string outCFile, string outCsFile)
+        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, CallingConvention callingConvention, string dllImportPath, string outCFile, string outCsFile)
         {
             var csFileSb = new StringBuilder();
             var cFileSb = new StringBuilder();
@@ -67,8 +68,9 @@ namespace CppPinvokeGenerator
                     var dllImportWriter = new FunctionWriter();
                     var apiFunctionWriter = new FunctionWriter();
 
+                    var callingConventionStr = callingConvention == CallingConvention.Winapi ? string.Empty : $", CallingConvention = CallingConvention.{callingConvention}";
                     dllImportWriter
-                        .Attribute($"[DllImport({dllImportPath}, CallingConvention = CallingConvention.Cdecl)]")
+                        .Attribute($"[DllImport({dllImportPath}{callingConventionStr})]")
                         .Private()
                         .Static()
                         .Extern();
