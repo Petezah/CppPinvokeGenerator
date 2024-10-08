@@ -62,8 +62,11 @@ namespace SimdJson
             mapper.RegisterUnsupportedTypes(
                 "simdjson", // it's empty - we don't need it
                 "__m128i",
+                "string",            // TODO:
+                "string_view",       // TODO
                 "basic_string",      // TODO:
                 "basic_string_view", // TODO
+                "ostream",           // TODO
                 "basic_ostream");    // TODO:
 
             var templateManager = new TemplateManager();

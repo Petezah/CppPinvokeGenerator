@@ -19,11 +19,11 @@ namespace CppPinvokeGenerator
         /// <param name="dllImportPath">will be used as the first argument in [DllImport]. Can be a path to some constant</param>
         public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, string dllImportPath, string outCFile, string outCsFile)
         {
-            Generate(mapper, templateManager, @namespace, CallingConvention.Cdecl, dllImportPath, outCFile, outCsFile);
+            Generate(mapper, templateManager, @namespace, CallingConvention.Cdecl, false, dllImportPath, outCFile, outCsFile);
         }
 
         /// <param name="dllImportPath">will be used as the first argument in [DllImport]. Can be a path to some constant</param>
-        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, CallingConvention callingConvention, string dllImportPath, string outCFile, string outCsFile)
+        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, CallingConvention callingConvention, bool writeProperties, string dllImportPath, string outCFile, string outCsFile)
         {
             var csFileSb = new StringBuilder();
             var cFileSb = new StringBuilder();
@@ -85,7 +85,7 @@ namespace CppPinvokeGenerator
                         .SummaryComment(function.Comment?.ChildrenToString());
 
                     var propertyInfo = propertyGenerator.AsPropertyCandidate(function);
-                    if (propertyInfo == null)
+                    if (propertyInfo == null || !writeProperties)
                         apiFunctionWriter.Public();
                     else
                     {

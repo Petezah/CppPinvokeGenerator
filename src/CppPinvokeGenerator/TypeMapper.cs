@@ -213,7 +213,7 @@ namespace CppPinvokeGenerator
 
             if (!keepPointer)
                 type = type.Replace("*", "");
-            return type;
+            return type.Trim();
         }
 
         internal string EscapeVariableName(string name)
@@ -249,10 +249,11 @@ namespace CppPinvokeGenerator
 
         internal (string, string, string) GetNativeParamMarshallingCode(string nativeType, string paramterName)
         {
+            bool isPtr = nativeType.Trim().EndsWith("*");
             nativeType = CleanType(nativeType);
             if (NativeParamMarshallingCode != null)
-                return NativeParamMarshallingCode(nativeType, paramterName);
-            return (nativeType, string.Empty, string.Empty);
+                return NativeParamMarshallingCode(nativeType + (isPtr ? "*" : ""), paramterName);
+            return (nativeType + (isPtr ? "*" : ""), string.Empty, string.Empty);
         }
 
         internal bool IsKnownNativeType(CppType nativeTtype)
