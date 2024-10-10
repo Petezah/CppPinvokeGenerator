@@ -1,4 +1,4 @@
-﻿    public %CLASS_UNSAFE_SAFE%static partial class %CLASS_NAME%
+    public %CLASS_UNSAFE_SAFE%static partial class %CLASS_NAME%
     {
         #region API
 %API%

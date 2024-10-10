@@ -1,4 +1,4 @@
-﻿    public %CLASS_UNSAFE_SAFE%partial class %CLASS_NAME% : SafeHandleZeroOrMinusOneIsInvalid
+    public %CLASS_UNSAFE_SAFE%partial class %CLASS_NAME% : SafeHandleZeroOrMinusOneIsInvalid
     {
         #region Handle
         /// <summary>
