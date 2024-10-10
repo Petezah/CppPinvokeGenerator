@@ -23,7 +23,7 @@ namespace CppPinvokeGenerator
                     if (f.Parameters.Count == 0 && !f.IsConstructor)
                     {
                         pi.GetterFunction = f;
-                        pi.GettetApiName = name;
+                        pi.GetterApiName = name;
                         pi.PropertyName = name.Remove(0, prefix.Length);
 
                         // looking for setter:
@@ -53,7 +53,7 @@ namespace CppPinvokeGenerator
         public CppFunction GetterFunction { get; set; }
         public CppFunction SetterFunction { get; set; }
         public string PropertyName { get; set; }
-        public string GettetApiName { get; set; }
+        public string GetterApiName { get; set; }
         public string SetterApiName { get; set; }
         public bool WrittenToApi { get; private set; } = false;
 
@@ -64,9 +64,22 @@ namespace CppPinvokeGenerator
             WrittenToApi = true;
             string type = _mapper.MapToManagedApiType(GetterFunction.ReturnType);
             string modifier = GetterFunction.IsStatic() ? "static " : "";
+            StringBuilder builder = new StringBuilder();
             if (SetterFunction == null)
-                return $"public {modifier}{type} {PropertyName} => {GettetApiName}();\n";
-            return $"public {modifier}{type} {PropertyName}\n{{\n    get => {GettetApiName}();\n    set => {SetterApiName}(value);\n}}\n";
+            {
+                builder
+                    .AppendLine($"public {modifier}{type} {PropertyName} => {GetterApiName}();");
+            }
+            else
+            {
+                builder
+                    .AppendLine($"public {modifier}{type} {PropertyName}")
+                    .AppendLine($"{{")
+                    .AppendLine($"    get => {GetterApiName}();")
+                    .AppendLine($"    set => {SetterApiName}(value);")
+                    .AppendLine($"}}");
+            }
+            return builder.ToString();
         }
     }
 }
