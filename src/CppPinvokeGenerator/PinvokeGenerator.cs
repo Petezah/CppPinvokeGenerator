@@ -19,11 +19,14 @@ namespace CppPinvokeGenerator
         /// <param name="dllImportPath">will be used as the first argument in [DllImport]. Can be a path to some constant</param>
         public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, string dllImportPath, string outCFile, string outCsFile)
         {
-            Generate(mapper, templateManager, @namespace, CallingConvention.Cdecl, false, dllImportPath, outCFile, outCsFile);
+            Generate(mapper, templateManager, @namespace, CallingConvention.Cdecl, false, dllImportPath, outCFile, outCsFile, false);
         }
 
         /// <param name="dllImportPath">will be used as the first argument in [DllImport]. Can be a path to some constant</param>
-        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, CallingConvention callingConvention, bool writeProperties, string dllImportPath, string outCFile, string outCsFile)
+        /// <param name="outCsFilePath">If writing a single file, this will be the name of the file written; if writing multiple files, this should be the path to the directory</param>
+        /// <param name="makeCsFilePerClass">True if each individual class should be written to a separate file, False if one file should be written</param>
+        /// <param name="csFilenameSuffix">If writing multiple C# files, this suffix will be appended to the class name to make the filename of the C# file</param>
+        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, CallingConvention callingConvention, bool writeProperties, string dllImportPath, string outCFile, string outCsFilePath, bool makeCsFilePerClass, string csFilenameSuffix = "")
         {
             var csFileSb = new StringBuilder();
             var cFileSb = new StringBuilder();
@@ -169,7 +172,7 @@ namespace CppPinvokeGenerator
                         // GlobalMethod
                         cfunctionWriter.BodyCallMethod(function.Name);
                     }
-                    else if(!function.IsConstructor && !function.IsStatic())
+                    else if (!function.IsConstructor && !function.IsStatic())
                     {
                         // target->InstanceMethod
                         cfunctionWriter.BodyCallMethod($"target->{function.Name}");
@@ -231,7 +234,7 @@ namespace CppPinvokeGenerator
                         // if the parameter is a C# class-wrapper - pass its Handle
                         else if (mapper.IsKnownNativeType(parameter.Type))
                             escapedName = $"({escapedName} == null ? IntPtr.Zero : {escapedName}.Handle)";
-                        
+
                         apiFunctionWriter.PassParameter(escapedName);
                     }
                     if (returnTypeInfo.HasValue)
@@ -280,10 +283,20 @@ namespace CppPinvokeGenerator
                     cFileSb
                         .AppendLine(cfunctionWriter.Build());
                 }
+
+                if (makeCsFilePerClass)
+                {
+                    var filename = Path.Combine(outCsFilePath, $"{cppClass?.Class?.GetFullTypeName() ?? templateManager.GlobalFunctionsClassName}{csFilenameSuffix}.cs");
+                    File.WriteAllText(filename, templateManager.CSharpHeader(@namespace, csFileSb.ToString()));
+                    csFileSb = new StringBuilder();
+                }
             }
 
             File.WriteAllText(outCFile, templateManager.CHeader() + cFileSb);
-            File.WriteAllText(outCsFile, templateManager.CSharpHeader(@namespace, csFileSb.ToString()));
+            if (!makeCsFilePerClass)
+            {
+                File.WriteAllText(outCsFilePath, templateManager.CSharpHeader(@namespace, csFileSb.ToString()));
+            }
         }
     }
 }

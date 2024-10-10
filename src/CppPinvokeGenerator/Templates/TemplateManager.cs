@@ -12,6 +12,8 @@ namespace CppPinvokeGenerator.Templates
         private string csGlobalClass = "GlobalFunctions";
         private string csClassUnsafeOrSafe = UnsafeClassString; // Preserve original default behavior
 
+        public string GlobalFunctionsClassName => csGlobalClass;
+
         public TemplateManager AddToCHeader(string content)
         {
             cHeader += content + "\n";
