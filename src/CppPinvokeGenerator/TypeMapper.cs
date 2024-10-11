@@ -13,6 +13,7 @@ namespace CppPinvokeGenerator
 
         private readonly CppCompilation _cppCompilation;
         private readonly HashSet<string> _registeredTypes = new HashSet<string>();
+        private readonly HashSet<string> _registeredEnums = new HashSet<string>();
         private readonly HashSet<string> _unsupportedTypes = new HashSet<string>();
         private readonly HashSet<string> _unsupportedMethods = new HashSet<string>();
 
@@ -144,7 +145,7 @@ namespace CppPinvokeGenerator
             {
                 if (IsSupported(cppEnum.GetDisplayName()))
                 {
-                    RegisterClass(CleanType(cppEnum.GetDisplayName()));
+                    RegisterEnum(CleanType(cppEnum.GetDisplayName()));
                     yield return new CppEnumContainer(cppEnum);
                 }
             }
@@ -154,6 +155,12 @@ namespace CppPinvokeGenerator
         {
             Logger.LogDebug($"RegisterClass({className})");
             _registeredTypes.Add(className);
+        }
+
+        public void RegisterEnum(string enumName)
+        {
+            Logger.LogDebug($"RegisterEnum({enumName})");
+            _registeredEnums.Add(enumName);
         }
 
         public void RegisterMapping(string nativeType, string managedType)
@@ -213,6 +220,9 @@ namespace CppPinvokeGenerator
             if (_registeredTypes.Contains(type))
                 return "IntPtr";
 
+            if (_registeredEnums.Contains(type))
+                return type;
+
             Logger.LogWarning($"No C# equivalent for {type}");
             return type + (isPtr ? "*" : "");
         }
@@ -229,7 +239,7 @@ namespace CppPinvokeGenerator
         internal static string CleanType(string type, bool keepPointer = false)
         {
             type = type
-                .Split(new [] {"::"}, StringSplitOptions.RemoveEmptyEntries).Last()
+                .Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries).Last()
                 .Replace("const ", "")
                 .Replace(" const", "")
                 .Replace("&", "");
