@@ -8,7 +8,7 @@ namespace CppPinvokeGenerator.Templates
     {
         private static readonly string UnsafeClassString = "unsafe ";
 
-        private string cHeader = "";
+        private StringBuilder cHeader = new StringBuilder();
         private string csGlobalClass = "GlobalFunctions";
         private string csClassUnsafeOrSafe = UnsafeClassString; // Preserve original default behavior
 
@@ -16,7 +16,7 @@ namespace CppPinvokeGenerator.Templates
 
         public TemplateManager AddToCHeader(string content)
         {
-            cHeader += content + "\n";
+            cHeader.AppendLine(content);
             return this;
         }
 
