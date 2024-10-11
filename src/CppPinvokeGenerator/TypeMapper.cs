@@ -16,6 +16,7 @@ namespace CppPinvokeGenerator
         private readonly HashSet<string> _registeredEnums = new HashSet<string>();
         private readonly HashSet<string> _unsupportedTypes = new HashSet<string>();
         private readonly HashSet<string> _unsupportedMethods = new HashSet<string>();
+        private readonly HashSet<string> _pointerOnlyTypes = new HashSet<string>();
 
         public struct ReturnTypeParamAddition
         {
@@ -193,6 +194,15 @@ namespace CppPinvokeGenerator
             _returnTypeParams[nativeType] = additionInfo;
         }
 
+        public void RegisterPointerOnlyTypes(params string[] types)
+        {
+            foreach (string type in types)
+            {
+                Logger.LogDebug($"RegisterPointerOnlyTypes({type});");
+                _pointerOnlyTypes.Add(CleanType(type));
+            }
+        }
+
         internal bool IsMethodMarkedAsUnsupported(CppFunction function)
         {
             if (function.Parent is CppClass cppClass)
@@ -331,6 +341,11 @@ namespace CppPinvokeGenerator
                 return info;
             }
             return null;
+        }
+
+        internal bool IsPointerOnlyType(string type)
+        {
+            return _pointerOnlyTypes.Contains(CleanType(type));
         }
     }
 }

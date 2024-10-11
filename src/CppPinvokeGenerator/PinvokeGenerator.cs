@@ -123,6 +123,10 @@ namespace CppPinvokeGenerator
                     {
                         var cReturnType = function.ReturnType.GetFullTypeName();
                         cReturnType = returnTypeInfo.HasValue ? "void" : cReturnType; // in the case of a parameter adjustment, the return value is coming back in OUT parameters
+                        if (mapper.IsPointerOnlyType(cReturnType))
+                        {
+                            cReturnType += "*";
+                        }
                         cfunctionWriter.ReturnType(cReturnType, "EXPORTS", 32);
                         dllImportWriter.ReturnType(returnTypeInfo.HasValue ? "void" : mapper.NativeToPinvokeType(function.ReturnType)); // DLL import must match the C function
                         apiFunctionWriter.ReturnType(mapper.MapToManagedApiType(function.ReturnType));
@@ -178,6 +182,10 @@ namespace CppPinvokeGenerator
 
                     cfunctionWriter.BodyStart(); // append "return" if needed
 
+                    if (mapper.IsPointerOnlyType(function.ReturnType.GetFullTypeName()))
+                    {
+                        cfunctionWriter.BodyCallMethod($"new {function.ReturnType.GetFullTypeName()}");
+                    }
                     if (cppClass.IsGlobal)
                     {
                         // GlobalMethod
