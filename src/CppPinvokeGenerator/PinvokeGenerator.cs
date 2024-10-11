@@ -31,16 +31,27 @@ namespace CppPinvokeGenerator
             var csFileSb = new StringBuilder();
             var cFileSb = new StringBuilder();
 
+            foreach (CppEnumContainer cppEnum in mapper.GetAllEnums())
+            {
+                var enumSb = new StringBuilder();
+                foreach (var item in cppEnum.Items)
+                {
+                    enumSb.AppendLine($"{item.Name} = {item.ValueExpression?.ToString() ?? item.Value.ToString()},".Tabify(2));
+                }
+                csFileSb.Append(templateManager.CSharpEnum(cppEnum.Name, enumSb.ToString()));
+
+                if (makeCsFilePerClass)
+                {
+                    var filename = Path.Combine(outCsFilePath, $"{cppEnum.Enum.GetFullTypeName()}{csFilenameSuffix}.cs");
+                    File.WriteAllText(filename, templateManager.CSharpHeader(@namespace, csFileSb.ToString()));
+                    csFileSb = new StringBuilder();
+                }
+            }
+
             foreach (CppClassContainer cppClass in mapper.GetAllClasses())
             {
                 // Header for C types:
-                cFileSb.AppendLine();
-                cFileSb.AppendLine();
-                cFileSb.Append("/************* ");
-                cFileSb.Append(cppClass.IsGlobal ? "Global functions:" : cppClass.Class.GetFullTypeName());
-                cFileSb.Append(" *************/");
-                cFileSb.AppendLine();
-                cFileSb.AppendLine();
+                cFileSb.Append(templateManager.CTypeHeader(cppClass.CHeaderTypeName));
 
                 var csDllImportsSb = new StringBuilder();
                 var csApiSb = new StringBuilder();

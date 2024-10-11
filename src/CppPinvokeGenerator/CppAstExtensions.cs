@@ -70,9 +70,9 @@ namespace CppPinvokeGenerator
             return true;
         }
 
-        public static IEnumerable<CppClass> OnlyUnique(this IEnumerable<CppClass> source)
+        public static IEnumerable<T> OnlyUnique<T>(this IEnumerable<T> source) where T : CppType
         {
-            return source.Distinct(new CppClassEqualityComparer());
+            return source.Distinct(new CppTypeEqualityComparer<T>());
         }
 
         /// <summary>
@@ -109,10 +109,10 @@ namespace CppPinvokeGenerator
         }
     }
 
-    internal class CppClassEqualityComparer : IEqualityComparer<CppClass>
+    internal class CppTypeEqualityComparer<T> : IEqualityComparer<T> where T : CppType
     {
-        public bool Equals(CppClass x, CppClass y) => x.GetFullTypeName().Equals(y.GetFullTypeName());
+        public bool Equals(T x, T y) => x.GetFullTypeName().Equals(y.GetFullTypeName());
 
-        public int GetHashCode(CppClass c) => c.GetFullTypeName().GetHashCode();
+        public int GetHashCode(T c) => c.GetFullTypeName().GetHashCode();
     }
 }

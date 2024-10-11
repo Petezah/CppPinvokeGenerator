@@ -35,6 +35,10 @@ namespace CppPinvokeGenerator.Templates
         public string CHeader() 
             => GetEmbeddedResource("CHeader.txt") + cHeader;
 
+        public string CTypeHeader(string typename)
+            => GetEmbeddedResource("CTypeHeader.txt")
+                .Replace("%TYPENAME%", typename.Trim('\n', '\r'));
+
         public string CSharpHeader(string @namespace, string content) 
             => GetEmbeddedResource("CSharpHeader.txt")
                 .Replace("%NAMESPACE%", @namespace)
@@ -56,6 +60,11 @@ namespace CppPinvokeGenerator.Templates
                 .Replace("%DLLIMPORTS%", dllImportsContent.Trim('\n', '\r'))
                 .Replace("%API%", apiContent.Trim('\n', '\r'))
                 .Replace("%NATIVE_LIBRARY_PATH%", nativeLibraryPath);
+
+        public string CSharpEnum(string enumName, string enumItems)
+            => GetEmbeddedResource("CSharpEnum.txt")
+                .Replace("%ENUM_NAME%", enumName)
+                .Replace("%ITEMS%", enumItems.Trim('\n', '\r'));
 
         private string GetEmbeddedResource(string file)
         {

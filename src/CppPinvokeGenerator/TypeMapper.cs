@@ -127,6 +127,29 @@ namespace CppPinvokeGenerator
             yield return new CppClassContainer(globalFunctions);
         }
 
+        internal IEnumerable<CppEnumContainer> GetAllEnums()
+        {
+            var allEnums = new List<CppEnum>();
+
+            allEnums.AddRange(_cppCompilation.Enums);
+
+            foreach (var ns in _cppCompilation.Namespaces)
+            {
+                allEnums.AddRange(ns.Enums);
+            }
+
+            allEnums = allEnums.OnlyUnique().ToList();
+
+            foreach (var cppEnum in allEnums)
+            {
+                if (IsSupported(cppEnum.GetDisplayName()))
+                {
+                    RegisterClass(CleanType(cppEnum.GetDisplayName()));
+                    yield return new CppEnumContainer(cppEnum);
+                }
+            }
+        }
+
         public void RegisterClass(string className)
         {
             Logger.LogDebug($"RegisterClass({className})");

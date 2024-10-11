@@ -23,6 +23,8 @@ namespace CppPinvokeGenerator
 
         public string Name => Class?.GetDisplayName();
 
+        public string CHeaderTypeName => IsGlobal ? "Global functions:" : Class.GetFullTypeName();
+
         public List<CppFunction> Functions { get; }
 
         public override string ToString() => Name;
