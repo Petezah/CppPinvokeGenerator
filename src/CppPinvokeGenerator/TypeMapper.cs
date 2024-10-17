@@ -121,7 +121,9 @@ namespace CppPinvokeGenerator
                 if (IsSupported(cppClass.GetDisplayName()))
                 {
                     RegisterClass(CleanType(cppClass.GetDisplayName()));
-                    yield return new CppClassContainer(cppClass);
+   
+                    var bases = cppClass.GetBaseClasses();
+                    yield return new CppClassContainer(cppClass, bases.ToArray());
                 }
             }
 

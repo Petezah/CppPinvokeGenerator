@@ -6,9 +6,13 @@ namespace CppPinvokeGenerator
 {
     public class CppClassContainer
     {
-        public CppClassContainer(CppClass cppClass)
+        public CppClassContainer(CppClass cppClass, params CppClass[] baseCppClasses)
         {
-            Functions = cppClass.Constructors.Concat(cppClass.Functions).ToList();
+            Functions = cppClass
+                .Constructors
+                .Concat(cppClass.Functions)
+                .Concat(baseCppClasses.SelectMany(c => c.Functions))
+                .ToList();
             Class = cppClass;
         }
 

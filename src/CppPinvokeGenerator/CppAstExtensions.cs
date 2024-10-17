@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using CppAst;
 
@@ -51,6 +52,22 @@ namespace CppPinvokeGenerator
             cppClasses.Add(cppClass);
             foreach (var subClass in cppClass.Classes)
                 VisitClass(cppClasses, subClass);
+        }
+
+        public static IEnumerable<CppClass> GetBaseClasses(this CppClass cppClass)
+        {
+            foreach (var baseType in cppClass.BaseTypes)
+            {
+                if (baseType.Type is CppClass baseClass)
+                {
+                    yield return baseClass;
+                    var bases = baseClass.GetBaseClasses();
+                    foreach (var c in bases)
+                    {
+                        yield return c;
+                    }
+                }
+            }
         }
 
         public static bool DumpErrorsIfAny(this CppCompilation compilation)
