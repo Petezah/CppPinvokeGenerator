@@ -22,13 +22,36 @@ namespace CppPinvokeGenerator
         /// </summary>
         public static string GetFullTypeName(this CppType cppType)
         {
+            string templateArgs = string.Empty;
+            if (cppType is CppClass cppClass && cppClass.TemplateKind == CppTemplateKind.TemplateSpecializedClass)
+            {
+                templateArgs = GetClassTemplateArgs(cppClass);
+            }
+
             string name = cppType.GetDisplayName();
             while (cppType.Parent is CppType parentType)
             {
                 name = parentType.GetDisplayName() + "::" + name;
                 cppType = parentType;
             }
-            return name;
+            return name + templateArgs;
+        }
+
+        public static string GetClassTemplateArgs(this CppClass cppClass)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append('<');
+            for (int i = 0; i < cppClass.TemplateSpecializedArguments.Count; i++)
+            {
+                var ta = cppClass.TemplateSpecializedArguments[i];
+                if (i != 0)
+                {
+                    sb.Append(", ");
+                }
+                sb.Append(ta.ArgString);
+            }
+            sb.Append('>');
+            return sb.ToString();
         }
 
         public static List<CppClass> GetAllClassesRecursively(this CppCompilation compilation)
