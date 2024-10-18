@@ -122,14 +122,16 @@ namespace CppPinvokeGenerator
                     else
                     {
                         var cReturnType = function.ReturnType.GetFullTypeName();
+                        var isPointerOnlyType = mapper.IsPointerOnlyType(cReturnType); // must get this info prior to renaming, since it may be a number of different type names
+                        cReturnType = mapper.RenameForCReturnValue(cReturnType);
                         cReturnType = returnTypeInfo.HasValue ? "void" : cReturnType; // in the case of a parameter adjustment, the return value is coming back in OUT parameters
-                        if (mapper.IsPointerOnlyType(cReturnType))
+                        if (isPointerOnlyType)
                         {
                             cReturnType += "*";
                         }
                         cfunctionWriter.ReturnType(cReturnType, "EXPORTS", 32);
-                        dllImportWriter.ReturnType(returnTypeInfo.HasValue ? "void" : mapper.NativeToPinvokeType(function.ReturnType)); // DLL import must match the C function
-                        apiFunctionWriter.ReturnType(mapper.MapToManagedApiType(function.ReturnType));
+                        dllImportWriter.ReturnType(returnTypeInfo.HasValue ? "void" : mapper.NativeToPinvokeType(function.ReturnType, isReturnValue: true)); // DLL import must match the C function
+                        apiFunctionWriter.ReturnType(mapper.MapToManagedApiType(function.ReturnType, isReturnValue: true));
                     }
 
                     cfunctionWriter.MethodName(flatFunctionName);
@@ -154,11 +156,11 @@ namespace CppPinvokeGenerator
                             parameter.Name);
 
                         dllImportWriter.Parameter(
-                            mapper.NativeToPinvokeType(parameter.Type),
+                            mapper.NativeToPinvokeType(parameter.Type, isReturnValue: false),
                             mapper.EscapeVariableName(parameter.Name));
 
                         apiFunctionWriter.Parameter(
-                            mapper.MapToManagedApiType(parameter.Type),
+                            mapper.MapToManagedApiType(parameter.Type, isReturnValue: false),
                             mapper.EscapeVariableName(parameter.Name));
                     }
                     if (returnTypeInfo.HasValue)
@@ -171,7 +173,7 @@ namespace CppPinvokeGenerator
                             cfunctionWriter.Parameter(param.Type, param.Name);
 
                             dllImportWriter.Parameter(
-                                param.PInvokeType ?? mapper.NativeToPinvokeType(param.Type),
+                                param.PInvokeType ?? mapper.NativeToPinvokeType(param.Type, isReturnValue: false),
                                 mapper.EscapeVariableName(param.Name));
                         }
                         cfunctionWriter.BodyAppendProlog(returnTypeInfo.Value.NativeProlog);
@@ -184,7 +186,8 @@ namespace CppPinvokeGenerator
 
                     if (mapper.IsPointerOnlyType(function.ReturnType.GetFullTypeName()))
                     {
-                        cfunctionWriter.BodyCallMethod($"new {function.ReturnType.GetFullTypeName()}");
+                        var newPointerTypeName = mapper.RenameForCReturnValue(function.ReturnType.GetFullTypeName());
+                        cfunctionWriter.BodyCallMethod($"new {newPointerTypeName}");
                     }
                     if (cppClass.IsGlobal)
                     {
@@ -222,11 +225,11 @@ namespace CppPinvokeGenerator
                     if (mapper.IsKnownNativeType(function.ReturnType))
                     {
                         // call "ctor(IntPtr, bool)"
-                        apiFunctionWriter.BodyCallMethod("new " + mapper.MapToManagedApiType(function.ReturnType));
+                        apiFunctionWriter.BodyCallMethod("new " + mapper.MapToManagedApiType(function.ReturnType, isReturnValue: true));
                     }
 
                     // some API functions need special casts, e.g. IntPtr/*size_t*/ (nint) to long
-                    if (mapper.NeedsCastForApi(function.ReturnType, out string returnTypeApiCast))
+                    if (mapper.NeedsCastForApi(function.ReturnType, isReturnValue: true, out string returnTypeApiCast))
                         apiFunctionWriter.BodyCallMethod(returnTypeApiCast);
 
                     apiFunctionWriter.BodyCallMethod(flatFunctionName);
@@ -240,7 +243,7 @@ namespace CppPinvokeGenerator
                         var (nativeType, newNativeName, prolog) = mapper.GetNativeParamMarshallingCode(parameter.Type.GetDisplayName(), parameter.Name);
                         cfunctionWriter.PassParameter(string.IsNullOrEmpty(newNativeName) ? parameter.Name : newNativeName);
 
-                        string dllImportType = mapper.NativeToPinvokeType(parameter.Type);
+                        string dllImportType = mapper.NativeToPinvokeType(parameter.Type, isReturnValue: false);
                         string escapedName = mapper.EscapeVariableName(parameter.Name);
 
                         if (parameter.Type.IsBool()) // bool to byte 

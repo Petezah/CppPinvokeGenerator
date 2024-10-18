@@ -48,7 +48,7 @@ namespace CppPinvokeGenerator
                 {
                     sb.Append(", ");
                 }
-                sb.Append(ta.ArgString);
+                sb.Append(ta.ArgAsType.GetFullTypeName());
             }
             sb.Append('>');
             return sb.ToString();

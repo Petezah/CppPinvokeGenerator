@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using CppAst;
@@ -17,6 +18,7 @@ namespace CppPinvokeGenerator
         private readonly HashSet<string> _unsupportedTypes = new HashSet<string>();
         private readonly HashSet<string> _unsupportedMethods = new HashSet<string>();
         private readonly HashSet<string> _pointerOnlyTypes = new HashSet<string>();
+        private readonly HashSet<string> _fullTypeNameTypes = new HashSet<string>();
 
         public struct ReturnTypeParamAddition
         {
@@ -204,6 +206,14 @@ namespace CppPinvokeGenerator
                 _pointerOnlyTypes.Add(CleanType(type));
             }
         }
+        public void RegisterFullTypeNameTypes(params string[] types)
+        {
+            foreach (string type in types)
+            {
+                Logger.LogDebug($"RegisterFullTypeNameTypes({type});");
+                _fullTypeNameTypes.Add(CleanType(type));
+            }
+        }
 
         internal bool IsMethodMarkedAsUnsupported(CppFunction function)
         {
@@ -212,14 +222,22 @@ namespace CppPinvokeGenerator
             return _unsupportedMethods.Contains(function.Name);
         }
 
-        internal string NativeToPinvokeType(CppType nativeType)
+        internal string NativeToPinvokeType(CppType nativeType, bool isReturnValue)
         {
             string type = nativeType.GetDisplayName();
-            return NativeToPinvokeType(type);
+            if (NeedsFullTypeName(type))
+            {
+                type = nativeType.GetFullTypeName();
+            }
+            return NativeToPinvokeType(type, isReturnValue);
         }
 
-        internal string NativeToPinvokeType(string type)
+        internal string NativeToPinvokeType(string type, bool isReturnValue)
         {
+            if (isReturnValue)
+            {
+                type = RenameForCReturnValue(type);
+            }
             bool isPtr = type.Trim().EndsWith("*");
             type = CleanType(type);
 
@@ -289,6 +307,21 @@ namespace CppPinvokeGenerator
             return name.ToCamelCase();
         }
 
+        public event Func<string, string> RenamingForNativeReturnValue;
+
+        internal string RenameForCReturnValue(string name)
+        {
+            if (RenamingForNativeReturnValue != null)
+            {
+                var newName = RenamingForNativeReturnValue(name);
+                if (newName != name && !_registeredTypes.Contains(newName))
+                    Logger.LogError($"No C++ type defined for {newName}!  Please define one!");
+                name = newName;
+            }
+
+            return name;
+        }
+
         // (nativeType, parameterName) => (nativeTypeOut, newParameterName, body)
         public event Func<string, string, (string, string, string)> NativeParamMarshallingCode;
 
@@ -301,21 +334,39 @@ namespace CppPinvokeGenerator
             return (nativeType + (isPtr ? "*" : ""), string.Empty, string.Empty);
         }
 
-        internal bool IsKnownNativeType(CppType nativeTtype)
+        internal bool IsKnownNativeType(CppType nativeType)
         {
-            var type = nativeTtype.GetDisplayName();
-            if (_registeredTypes.Any(rt => rt == CleanType(type)))
+            var type = nativeType.GetDisplayName();
+            if (NeedsFullTypeName(type))
+            {
+                type = nativeType.GetFullTypeName();
+            }
+            type = RenameForCReturnValue(type);
+            return IsKnownNativeType(type);
+        }
+
+        internal bool IsKnownNativeType(string nativeType) 
+        {
+            if (_registeredTypes.Any(rt => rt == CleanType(nativeType)))
                 return true;
             return false;
         }
 
-        internal string MapToManagedApiType(CppType nativeType)
+        internal string MapToManagedApiType(CppType nativeType, bool isReturnValue)
         {
             string type = nativeType.GetDisplayName();
-            if (IsKnownNativeType(nativeType))
+            if (NeedsFullTypeName(type))
+            {
+                type = nativeType.GetFullTypeName();
+            }
+            if (isReturnValue)
+            {
+                type = RenameForCReturnValue(type);
+            }
+            if (IsKnownNativeType(type))
                 return RenameForApi(CleanType(type), false);
 
-            type = NativeToPinvokeType(nativeType);
+            type = NativeToPinvokeType(nativeType, isReturnValue);
             if (type.Contains("/*usize_t*/")) return nameof(UInt64);
             if (type.Contains("/*size_t*/")) return nameof(Int64);
             if (type.Contains("/*bool*/")) return nameof(Boolean);
@@ -323,16 +374,16 @@ namespace CppPinvokeGenerator
             return type;
         }
 
-        internal bool NeedsCastForApi(CppType nativeType, out string cast)
+        internal bool NeedsCastForApi(CppType nativeType, bool isReturnValue, out string cast)
         {
-            string managedType = NativeToPinvokeType(nativeType);
+            string managedType = NativeToPinvokeType(nativeType, isReturnValue);
             if (!managedType.Contains("/*") || nativeType.IsBool())
             {
                 cast = null;
                 return false;
             }
 
-            cast = $"({MapToManagedApiType(nativeType)})";
+            cast = $"({MapToManagedApiType(nativeType, isReturnValue)})";
             return true;
         }
 
@@ -347,7 +398,25 @@ namespace CppPinvokeGenerator
 
         internal bool IsPointerOnlyType(string type)
         {
-            return _pointerOnlyTypes.Contains(CleanType(type));
+            return _pointerOnlyTypes.Contains(CleanType(type), new PointerTypeComparer());
+        }
+
+        internal class PointerTypeComparer : IEqualityComparer<string>
+        {
+            public bool Equals(string x, string y)
+            {
+                return string.Equals(x, y) || y.StartsWith(x);
+            }
+
+            public int GetHashCode([DisallowNull] string obj)
+            {
+                return obj.GetHashCode();
+            }
+        }
+
+        internal bool NeedsFullTypeName(string type)
+        {
+            return _fullTypeNameTypes.Contains(CleanType(type));
         }
     }
 }
