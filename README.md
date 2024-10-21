@@ -1,5 +1,8 @@
 # CppPinvokeGenerator
-A simple pinvoke generator based on [xoofx/CppAst](https://github.com/xoofx/CppAst) to generate C# for C/C++
+
+This is a fork of [EgorBo/CppPinvokeGenerator](https://github.com/EgorBo/CppPinvokeGenerator):
+
+A simple pinvoke generator based on [xoofx/CppAst](https://github.com/xoofx/CppAst) to generate C# for C/C++ with a few more features to help with binding string types, and for handling more complex type mapping.
 
 Let's say we have a C++ class:
 ```c++
