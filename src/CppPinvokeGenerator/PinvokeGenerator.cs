@@ -34,15 +34,22 @@ namespace CppPinvokeGenerator
             foreach (CppEnumContainer cppEnum in mapper.GetAllEnums())
             {
                 var enumSb = new StringBuilder();
+                var enumName = mapper.RenameForApi(cppEnum.Name, false);
                 foreach (var item in cppEnum.Items)
                 {
-                    enumSb.AppendLine($"{item.Name} = {item.ValueExpression?.ToString() ?? item.Value.ToString()},".Tabify(2));
+                    var itemName = mapper.RenameForApi(item.Name, false);
+                    // Trim off the enum name if the item name contains it
+                    if (itemName.Contains(enumName))
+                    {
+                        itemName = itemName.Replace(enumName, "");
+                    }
+                    enumSb.AppendLine($"{itemName} = {item.ValueExpression?.ToString() ?? item.Value.ToString()},".Tabify(2));
                 }
-                csFileSb.Append(templateManager.CSharpEnum(cppEnum.Name, enumSb.ToString()));
+                csFileSb.Append(templateManager.CSharpEnum(enumName, enumSb.ToString()));
 
                 if (makeCsFilePerClass)
                 {
-                    var filename = Path.Combine(outCsFilePath, $"{cppEnum.Enum.GetFullTypeName()}{csFilenameSuffix}.cs");
+                    var filename = Path.Combine(outCsFilePath, $"{mapper.RenameForApi(cppEnum.Enum.GetFullTypeName(), false)}{csFilenameSuffix}.cs");
                     File.WriteAllText(filename, templateManager.CSharpHeader(@namespace, csFileSb.ToString()));
                     csFileSb = new StringBuilder();
                 }
@@ -100,7 +107,12 @@ namespace CppPinvokeGenerator
 
                     var propertyInfo = propertyGenerator.AsPropertyCandidate(function);
                     if (propertyInfo == null || !writeProperties)
-                        apiFunctionWriter.Public();
+                    {
+                        if (function.Name.StartsWith("Internal"))
+                            apiFunctionWriter.Internal();
+                        else
+                            apiFunctionWriter.Public();
+                    }
                     else
                     {
                         apiFunctionWriter.Private();
@@ -136,7 +148,8 @@ namespace CppPinvokeGenerator
 
                     cfunctionWriter.MethodName(flatFunctionName);
                     dllImportWriter.MethodName(flatFunctionName);
-                    apiFunctionWriter.MethodName(mapper.RenameForApi(function.Name, isMethod: !function.IsConstructor));
+                    var functionName = function.IsConstructor ? cppClass.Name : function.Name; // handle super-class constructors
+                    apiFunctionWriter.MethodName(mapper.RenameForApi(functionName, isMethod: !function.IsConstructor));
 
                     if (!function.IsConstructor &&
                         !function.IsStatic() &&
@@ -308,7 +321,7 @@ namespace CppPinvokeGenerator
 
                 if (makeCsFilePerClass)
                 {
-                    var filename = Path.Combine(outCsFilePath, $"{cppClass?.Class?.GetFullTypeName() ?? templateManager.GlobalFunctionsClassName}{csFilenameSuffix}.cs");
+                    var filename = Path.Combine(outCsFilePath, $"{mapper.RenameForApi(cppClass?.Class?.GetFullTypeName() ?? templateManager.GlobalFunctionsClassName, false)}{csFilenameSuffix}.cs");
                     File.WriteAllText(filename, templateManager.CSharpHeader(@namespace, csFileSb.ToString()));
                     csFileSb = new StringBuilder();
                 }

@@ -123,7 +123,7 @@ namespace CppPinvokeGenerator
                 if (IsSupported(cppClass.GetDisplayName()))
                 {
                     RegisterClass(CleanType(cppClass.GetDisplayName()));
-   
+
                     var bases = cppClass.GetBaseClasses();
                     yield return new CppClassContainer(cppClass, bases.ToArray());
                 }
@@ -251,7 +251,7 @@ namespace CppPinvokeGenerator
                 return "IntPtr";
 
             if (_registeredEnums.Contains(type))
-                return type;
+                return RenameForApi(type, false);
 
             Logger.LogWarning($"No C# equivalent for {type}");
             return type + (isPtr ? "*" : "");
@@ -345,7 +345,7 @@ namespace CppPinvokeGenerator
             return IsKnownNativeType(type);
         }
 
-        internal bool IsKnownNativeType(string nativeType) 
+        internal bool IsKnownNativeType(string nativeType)
         {
             if (_registeredTypes.Any(rt => rt == CleanType(nativeType)))
                 return true;

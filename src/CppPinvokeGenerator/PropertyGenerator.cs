@@ -12,7 +12,7 @@ namespace CppPinvokeGenerator
 
         public void RegisterCandidates(TypeMapper mapper, List<CppFunction> functions)
         {
-            string[] prefixes = {"Is", "Has", "Get"};
+            string[] prefixes = { "Is", "Has", "Get" };
             foreach (var f in functions)
             {
                 var pi = new PropertyInfo(mapper);
@@ -53,6 +53,7 @@ namespace CppPinvokeGenerator
         public CppFunction GetterFunction { get; set; }
         public CppFunction SetterFunction { get; set; }
         public string PropertyName { get; set; }
+        public string Access => PropertyName.StartsWith("Internal") ? "internal" : "public";
         public string GetterApiName { get; set; }
         public string SetterApiName { get; set; }
         public bool WrittenToApi { get; private set; } = false;
@@ -68,7 +69,7 @@ namespace CppPinvokeGenerator
             if (SetterFunction == null)
             {
                 builder
-                    .AppendLine($"public {modifier}{type} {PropertyName} => {GetterApiName}();");
+                    .AppendLine($"{Access} {modifier}{type} {PropertyName} => {GetterApiName}();");
             }
             else
             {

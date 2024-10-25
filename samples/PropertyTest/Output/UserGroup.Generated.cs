@@ -53,6 +53,8 @@ namespace TestAPI
         private Boolean GetGroupIsActive() => UserGroup_GetGroupIsActive_0(Handle) > 0;
 
         private void SetGroupIsActive(Boolean active) => UserGroup_SetGroupIsActive_b(Handle, (Byte)(active ? 1 : 0));
+
+        internal void InternalDoSomething() => UserGroup_InternalDoSomething_0(Handle);
         #endregion
 
         #region DllImports
@@ -76,6 +78,9 @@ namespace TestAPI
 
         [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
         private static extern void UserGroup_SetGroupIsActive_b(IntPtr target, Byte/*bool*/ active);
+
+        [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void UserGroup_InternalDoSomething_0(IntPtr target);
         #endregion
 
         #region ReleaseHandle

@@ -42,6 +42,12 @@ namespace CppPinvokeGenerator
             return this;
         }
 
+        public FunctionWriter Internal()
+        {
+            _sb.Append("internal ");
+            return this;
+        }
+
         public FunctionWriter Extern()
         {
             _sb.Append("extern ");
@@ -211,7 +217,7 @@ namespace CppPinvokeGenerator
             _sb.AppendLine("/// <summary>");
 
             if (!string.IsNullOrWhiteSpace(comments))
-                foreach (var commentLine in comments.Split(new [] {"\n", "\r\n"}, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var commentLine in comments.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                     _sb.Append("/// ").AppendLine(commentLine);
 
             _sb.AppendLine("/// </summary>");

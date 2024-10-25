@@ -11,6 +11,7 @@ namespace CppPinvokeGenerator
             Functions = cppClass
                 .Constructors
                 .Concat(cppClass.Functions)
+                .Concat(baseCppClasses.SelectMany(c => c.Constructors))
                 .Concat(baseCppClasses.SelectMany(c => c.Functions))
                 .ToList();
             Class = cppClass;

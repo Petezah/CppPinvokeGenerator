@@ -32,6 +32,7 @@ EXPORTS(void)                   UserGroup_GetGroupName_0(UserGroup* target, char
 EXPORTS(void)                   UserGroup_SetGroupName_s(UserGroup* target, const char* groupName) { auto demo_string_param = groupName; target->SetGroupName(demo_string_param); }
 EXPORTS(bool)                   UserGroup_GetGroupIsActive_0(UserGroup* target) { return target->GetGroupIsActive(); }
 EXPORTS(void)                   UserGroup_SetGroupIsActive_b(UserGroup* target, bool active) { target->SetGroupIsActive(active); }
+EXPORTS(void)                   UserGroup_InternalDoSomething_0(UserGroup* target) { target->InternalDoSomething(); }
 EXPORTS(void)                   UserGroup__delete(UserGroup* target) { delete target; }
 
 

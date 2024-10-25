@@ -34,9 +34,25 @@ namespace testapi {
         bool GetGroupIsActive() const { return m_active; }
         void SetGroupIsActive(bool active) { m_active = active; }
 
+        void InternalDoSomething() {}
+
     private:
         StringVector m_users;
         std::string m_name;
         bool m_active;
+    };
+
+    enum my_test_enum
+    {
+        my_test_enum_one,
+        my_test_enum_two,
+        my_test_enum_three,
+    };
+
+    enum class another_test_enum
+    {
+        foo,
+        bar,
+        bas
     };
 }
