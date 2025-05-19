@@ -120,9 +120,22 @@ namespace CppPinvokeGenerator
 
             foreach (var cppClass in allClasses)
             {
-                if (IsSupported(cppClass.GetDisplayName()))
+                // Skip templates with no specialization
+                if (cppClass.TemplateKind == CppTemplateKind.TemplateClass)
                 {
-                    RegisterClass(CleanType(cppClass.GetDisplayName()));
+                    continue;
+                }
+
+                var type = cppClass.GetDisplayName();
+                if (NeedsFullTypeName(type))
+                {
+                    type = cppClass.GetFullTypeName();
+                }
+                type = RenameForCType(type, logErrorsForMissingClasses: false); // no logging here; we are collecting classes to generate
+
+                if (IsSupported(type))
+                {
+                    RegisterClass(CleanType(type));
 
                     var bases = cppClass.GetBaseClasses();
                     yield return new CppClassContainer(cppClass, bases.ToArray());
@@ -236,7 +249,7 @@ namespace CppPinvokeGenerator
         {
             if (isReturnValue)
             {
-                type = RenameForCReturnValue(type);
+                type = RenameForCType(type, logErrorsForMissingClasses: true);
             }
             bool isPtr = type.Trim().EndsWith("*");
             type = CleanType(type);
@@ -307,16 +320,18 @@ namespace CppPinvokeGenerator
             return name.ToCamelCase();
         }
 
-        public event Func<string, string> RenamingForNativeReturnValue;
+        public event Func<string, string> RenamingForNativeType;
 
-        internal string RenameForCReturnValue(string name)
+        internal string RenameForCType(string name, bool logErrorsForMissingClasses)
         {
-            if (RenamingForNativeReturnValue != null)
+            if (RenamingForNativeType != null)
             {
-                var newName = RenamingForNativeReturnValue(name);
-                if (newName != name && !_registeredTypes.Contains(newName))
+                var cleanName = CleanType(name);
+
+                var newName = RenamingForNativeType(cleanName);
+                if (newName != cleanName && !_registeredTypes.Contains(newName) && logErrorsForMissingClasses)
                     Logger.LogError($"No C++ type defined for {newName}!  Please define one!");
-                name = newName;
+                name = name.Replace(cleanName, newName); // retain all qualifiers by replacing just the type string
             }
 
             return name;
@@ -341,7 +356,7 @@ namespace CppPinvokeGenerator
             {
                 type = nativeType.GetFullTypeName();
             }
-            type = RenameForCReturnValue(type);
+            type = RenameForCType(type, logErrorsForMissingClasses: true);
             return IsKnownNativeType(type);
         }
 
@@ -361,7 +376,7 @@ namespace CppPinvokeGenerator
             }
             if (isReturnValue)
             {
-                type = RenameForCReturnValue(type);
+                type = RenameForCType(type, logErrorsForMissingClasses: true);
             }
             if (IsKnownNativeType(type))
                 return RenameForApi(CleanType(type), false);
@@ -389,7 +404,7 @@ namespace CppPinvokeGenerator
 
         internal ReturnTypeParamAddition? GetReturnTypeParamAddition(string returnType)
         {
-            if (_returnTypeParams.TryGetValue(returnType, out var info))
+            if (_returnTypeParams.TryGetValue(CleanType(returnType), out var info))
             {
                 return info;
             }

@@ -16,12 +16,19 @@ namespace CppPinvokeGenerator
         public static bool IsOperator(this CppFunction func) => func.Name.StartsWith("operator"); // TODO: regex?
 
         public static bool IsStatic(this CppFunction func) => func.StorageQualifier == CppStorageQualifier.Static;
-        
+
         /// <summary>
         /// If a type defined under another type, then print the full name, e.g. Class1::Class2
         /// </summary>
         public static string GetFullTypeName(this CppType cppType)
         {
+            bool isRef = false;
+            if (cppType is CppReferenceType refType)
+            {
+                isRef = true;
+                cppType = refType.ElementType;
+            }
+
             string templateArgs = string.Empty;
             if (cppType is CppClass cppClass && cppClass.TemplateKind == CppTemplateKind.TemplateSpecializedClass)
             {
@@ -34,7 +41,7 @@ namespace CppPinvokeGenerator
                 name = parentType.GetDisplayName() + "::" + name;
                 cppType = parentType;
             }
-            return name + templateArgs;
+            return name + templateArgs + (isRef ? "&" : "");
         }
 
         public static string GetClassTemplateArgs(this CppClass cppClass)
@@ -144,8 +151,12 @@ namespace CppPinvokeGenerator
             if (!function.IsConstructor || function.Parameters.Count != 1)
                 return false;
 
-            var p = function.Parameters[0].Type.GetDisplayName();
-            return p.StartsWith("const ") && p.Contains("&"); // TODO: 
+            if (function.Parameters[0].Type is CppReferenceType refType
+                && refType.ElementType is CppQualifiedType qualType)
+            {
+                return qualType.Qualifier == CppTypeQualifier.Const;
+            }
+            return false;
         }
     }
 

@@ -55,7 +55,8 @@ namespace CppPinvokeGenerator
                 }
             }
 
-            foreach (CppClassContainer cppClass in mapper.GetAllClasses())
+            var allClasses = mapper.GetAllClasses().ToArray();
+            foreach (CppClassContainer cppClass in allClasses)
             {
                 // Header for C types:
                 cFileSb.Append(templateManager.CTypeHeader(cppClass.CHeaderTypeName));
@@ -81,6 +82,13 @@ namespace CppPinvokeGenerator
                     }
 
                     allFunctions.Add(function);
+                }
+
+                if (allFunctions.Count == 0
+                    && cppClass.IsGlobal)
+                {
+                    // This file will be totally empty; skip it
+                    continue;
                 }
 
                 var propertyGenerator = new PropertyGenerator();
@@ -135,7 +143,7 @@ namespace CppPinvokeGenerator
                     {
                         var cReturnType = function.ReturnType.GetFullTypeName();
                         var isPointerOnlyType = mapper.IsPointerOnlyType(cReturnType); // must get this info prior to renaming, since it may be a number of different type names
-                        cReturnType = mapper.RenameForCReturnValue(cReturnType);
+                        cReturnType = mapper.RenameForCType(cReturnType, logErrorsForMissingClasses: true);
                         cReturnType = returnTypeInfo.HasValue ? "void" : cReturnType; // in the case of a parameter adjustment, the return value is coming back in OUT parameters
                         if (isPointerOnlyType)
                         {
@@ -199,7 +207,7 @@ namespace CppPinvokeGenerator
 
                     if (mapper.IsPointerOnlyType(function.ReturnType.GetFullTypeName()))
                     {
-                        var newPointerTypeName = mapper.RenameForCReturnValue(function.ReturnType.GetFullTypeName());
+                        var newPointerTypeName = mapper.RenameForCType(function.ReturnType.GetFullTypeName(), logErrorsForMissingClasses: true);
                         cfunctionWriter.BodyCallMethod($"new {newPointerTypeName}");
                     }
                     if (cppClass.IsGlobal)
@@ -305,13 +313,19 @@ namespace CppPinvokeGenerator
                     csFileSb.Append(templateManager.CSharpGlobalClass(csDllImportsSb.ToString(), csApiSb.ToString(), dllImportPath));
                 else if (!cppClass.IsGlobal)
                 {
-                    csFileSb.Append(templateManager.CSharpClass(mapper.RenameForApi(cppClass.Name, false), cppClass.Name, csDllImportsSb.ToString(), csApiSb.ToString(), dllImportPath));
+                    var nativeClassName = cppClass.Name;
+                    if (mapper.NeedsFullTypeName(nativeClassName))
+                    {
+                        nativeClassName = cppClass.Class.GetFullTypeName();
+                    }
+                    nativeClassName = nativeClassName.Replace("<", "_").Replace(">", "_").Replace(",", "_");
+                    csFileSb.Append(templateManager.CSharpClass(mapper.RenameForApi(cppClass.Class.GetFullTypeName(), false), nativeClassName, csDllImportsSb.ToString(), csApiSb.ToString(), dllImportPath));
 
                     // Append "delete" method:
                     // EXPORTS(void) %class%_delete(%class%* target) { if (target) delete target; }
                     var cfunctionWriter = new FunctionWriter();
                     cfunctionWriter.ReturnType("void", "EXPORTS", 32)
-                        .MethodName(cppClass.Name + "__delete")
+                        .MethodName(nativeClassName + "__delete")
                         .Parameter(cppClass.Class.GetFullTypeName() + "*", "target")
                         .BodyStart()
                         .Body("delete target");

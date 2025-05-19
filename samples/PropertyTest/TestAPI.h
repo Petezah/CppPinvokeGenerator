@@ -20,6 +20,17 @@ namespace testapi {
         size_t Size() { return size(); }
     };
 
+    template<typename T>
+    class TrivialTemplate
+    {
+    public:
+        TrivialTemplate(T val) : m_Val(val) {}
+        T& TemplateGetVal() { return m_Val; }
+
+    private:
+        T m_Val;
+    };
+
     class UserGroup
     {
     public:
@@ -34,12 +45,16 @@ namespace testapi {
         bool GetGroupIsActive() const { return m_active; }
         void SetGroupIsActive(bool active) { m_active = active; }
 
+        TrivialTemplate<bool> GetTemplateMember1() { return TrivialTemplate<bool>(m_active); }
+        TrivialTemplate<int> GetTemplateMember2() { return TrivialTemplate<int>(m_index); }
+
         void InternalDoSomething() {}
 
     private:
         StringVector m_users;
         std::string m_name;
-        bool m_active;
+        int m_index = 0;
+        bool m_active = false;
     };
 
     enum my_test_enum
@@ -54,5 +69,42 @@ namespace testapi {
         foo,
         bar,
         bas
+    };
+
+    // This will help with the template linkage; note how these are not actually used in the UserGroup class directly
+    using BoolTrivialTemplateBase = TrivialTemplate<bool>;
+    class BoolTrivialTemplate : public BoolTrivialTemplateBase
+    {
+    public:
+        BoolTrivialTemplate() = default;
+        BoolTrivialTemplate(const BoolTrivialTemplate& src) = default;
+        BoolTrivialTemplate& operator=(const BoolTrivialTemplate&) = default;
+        BoolTrivialTemplate(BoolTrivialTemplate&& src) = default;
+        explicit BoolTrivialTemplate(const BoolTrivialTemplateBase& src) :
+            BoolTrivialTemplateBase(src) {
+        }
+        explicit BoolTrivialTemplate(BoolTrivialTemplateBase&& src) :
+            BoolTrivialTemplateBase(std::move(src)) {
+        }
+
+        bool GetVal() { return TemplateGetVal(); }
+    };
+
+    using IntTrivialTemplateBase = TrivialTemplate<int>;
+    class IntTrivialTemplate : public IntTrivialTemplateBase
+    {
+    public:
+        IntTrivialTemplate() = default;
+        IntTrivialTemplate(const IntTrivialTemplate& src) = default;
+        IntTrivialTemplate& operator=(const IntTrivialTemplate&) = default;
+        IntTrivialTemplate(IntTrivialTemplate&& src) = default;
+        explicit IntTrivialTemplate(const IntTrivialTemplateBase& src) :
+            IntTrivialTemplateBase(src) {
+        }
+        explicit IntTrivialTemplate(IntTrivialTemplateBase&& src) :
+            IntTrivialTemplateBase(std::move(src)) {
+        }
+
+        int GetVal() { return TemplateGetVal(); }
     };
 }

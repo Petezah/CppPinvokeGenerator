@@ -24,8 +24,6 @@ namespace TestAPI
         #region API
         public StringVector() : base(ownsHandle: true) => SetHandle(StringVector_StringVector_0());
 
-        public StringVector(StringVector src) : base(ownsHandle: true) => SetHandle(StringVector_StringVector_S((src == null ? IntPtr.Zero : src.Handle)));
-
         public void Add(string item) => StringVector_Add_s(Handle, item);
 
         public string Get(Int64 index) { int buffer_len = 255; var buffer = new System.Text.StringBuilder(buffer_len); StringVector_Get_s(Handle, (IntPtr)index, buffer, buffer_len); return buffer.ToString(); }
@@ -36,9 +34,6 @@ namespace TestAPI
         #region DllImports
         [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr StringVector_StringVector_0();
-
-        [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr StringVector_StringVector_S(IntPtr src);
 
         [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
         private static extern void StringVector_Add_s(IntPtr target, string item);

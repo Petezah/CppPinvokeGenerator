@@ -11,12 +11,12 @@
 
 /************* StringVector *************/
 
+//NOT_BOUND:                    public StringVector(StringVector const& src)
 //NOT_BOUND:                    public StringVector(StringVector && src)
 //NOT_BOUND:                    public StringVector(StringVectorBase const& src)
 //NOT_BOUND:                    public StringVector(StringVectorBase && src)
 //NOT_BOUND:                    public StringVector& operator=(StringVector const&)
 EXPORTS(StringVector*)          StringVector_StringVector_0() { return new StringVector(); }
-EXPORTS(StringVector*)          StringVector_StringVector_S(StringVector src) { return new StringVector(src); }
 EXPORTS(void)                   StringVector_Add_s(StringVector* target, const char* item) { auto demo_string_param = item; target->Add(demo_string_param); }
 EXPORTS(void)                   StringVector_Get_s(StringVector* target, size_t index, char* buffer, int buffer_len) { auto native_str = target->Get(index); strncpy(buffer, native_str.c_str(), buffer_len);  }
 EXPORTS(size_t)                 StringVector_Size_0(StringVector* target) { return target->Size(); }
@@ -32,8 +32,44 @@ EXPORTS(void)                   UserGroup_GetGroupName_0(UserGroup* target, char
 EXPORTS(void)                   UserGroup_SetGroupName_s(UserGroup* target, const char* groupName) { auto demo_string_param = groupName; target->SetGroupName(demo_string_param); }
 EXPORTS(bool)                   UserGroup_GetGroupIsActive_0(UserGroup* target) { return target->GetGroupIsActive(); }
 EXPORTS(void)                   UserGroup_SetGroupIsActive_b(UserGroup* target, bool active) { target->SetGroupIsActive(active); }
+EXPORTS(BoolTrivialTemplate*)   UserGroup_GetTemplateMember1_0(UserGroup* target) { return new BoolTrivialTemplate(target->GetTemplateMember1()); }
+EXPORTS(IntTrivialTemplate*)    UserGroup_GetTemplateMember2_0(UserGroup* target) { return new IntTrivialTemplate(target->GetTemplateMember2()); }
 EXPORTS(void)                   UserGroup_InternalDoSomething_0(UserGroup* target) { target->InternalDoSomething(); }
 EXPORTS(void)                   UserGroup__delete(UserGroup* target) { delete target; }
+
+
+/************* TrivialTemplate<bool> *************/
+
+EXPORTS(void)                   TrivialTemplate_bool___delete(TrivialTemplate<bool>* target) { delete target; }
+
+
+/************* TrivialTemplate<int> *************/
+
+EXPORTS(void)                   TrivialTemplate_int___delete(TrivialTemplate<int>* target) { delete target; }
+
+
+/************* BoolTrivialTemplate *************/
+
+//NOT_BOUND:                    public BoolTrivialTemplate(BoolTrivialTemplate const& src)
+//NOT_BOUND:                    public BoolTrivialTemplate(BoolTrivialTemplate && src)
+//NOT_BOUND:                    public BoolTrivialTemplate(BoolTrivialTemplateBase const& src)
+//NOT_BOUND:                    public BoolTrivialTemplate(BoolTrivialTemplateBase && src)
+//NOT_BOUND:                    public BoolTrivialTemplate& operator=(BoolTrivialTemplate const&)
+EXPORTS(BoolTrivialTemplate*)   BoolTrivialTemplate_BoolTrivialTemplate_0() { return new BoolTrivialTemplate(); }
+EXPORTS(bool)                   BoolTrivialTemplate_GetVal_0(BoolTrivialTemplate* target) { return target->GetVal(); }
+EXPORTS(void)                   BoolTrivialTemplate__delete(BoolTrivialTemplate* target) { delete target; }
+
+
+/************* IntTrivialTemplate *************/
+
+//NOT_BOUND:                    public IntTrivialTemplate(IntTrivialTemplate const& src)
+//NOT_BOUND:                    public IntTrivialTemplate(IntTrivialTemplate && src)
+//NOT_BOUND:                    public IntTrivialTemplate(IntTrivialTemplateBase const& src)
+//NOT_BOUND:                    public IntTrivialTemplate(IntTrivialTemplateBase && src)
+//NOT_BOUND:                    public IntTrivialTemplate& operator=(IntTrivialTemplate const&)
+EXPORTS(IntTrivialTemplate*)    IntTrivialTemplate_IntTrivialTemplate_0() { return new IntTrivialTemplate(); }
+EXPORTS(int)                    IntTrivialTemplate_GetVal_0(IntTrivialTemplate* target) { return target->GetVal(); }
+EXPORTS(void)                   IntTrivialTemplate__delete(IntTrivialTemplate* target) { delete target; }
 
 
 /************* Global functions: *************/

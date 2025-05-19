@@ -54,6 +54,14 @@ namespace TestAPI
 
         private void SetGroupIsActive(Boolean active) => UserGroup_SetGroupIsActive_b(Handle, (Byte)(active ? 1 : 0));
 
+        public BoolTrivialTemplate TemplateMember1 => GetTemplateMember1();
+        
+        private BoolTrivialTemplate GetTemplateMember1() => new BoolTrivialTemplate(UserGroup_GetTemplateMember1_0(Handle), false);
+
+        public IntTrivialTemplate TemplateMember2 => GetTemplateMember2();
+        
+        private IntTrivialTemplate GetTemplateMember2() => new IntTrivialTemplate(UserGroup_GetTemplateMember2_0(Handle), false);
+
         internal void InternalDoSomething() => UserGroup_InternalDoSomething_0(Handle);
         #endregion
 
@@ -78,6 +86,12 @@ namespace TestAPI
 
         [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
         private static extern void UserGroup_SetGroupIsActive_b(IntPtr target, Byte/*bool*/ active);
+
+        [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr UserGroup_GetTemplateMember1_0(IntPtr target);
+
+        [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr UserGroup_GetTemplateMember2_0(IntPtr target);
 
         [DllImport(TestAPIN.NativeLib, CallingConvention = CallingConvention.Cdecl)]
         private static extern void UserGroup_InternalDoSomething_0(IntPtr target);
