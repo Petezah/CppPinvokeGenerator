@@ -254,11 +254,11 @@ namespace CppPinvokeGenerator
             bool isPtr = type.Trim().EndsWith("*");
             type = CleanType(type);
 
-            if (_mappings.TryGetValue(type, out string managedType))
-                return managedType + (isPtr ? "*" : "");
-
             if (isPtr && _mappings.TryGetValue(type + "*", out string managedTypePtr))
                 return managedTypePtr;
+
+            if (_mappings.TryGetValue(type, out string managedType))
+                return managedType + (isPtr ? "*" : "");
 
             if (_registeredTypes.Contains(type))
                 return "IntPtr";

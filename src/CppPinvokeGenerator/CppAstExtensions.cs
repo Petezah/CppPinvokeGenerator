@@ -61,6 +61,19 @@ namespace CppPinvokeGenerator
             return sb.ToString();
         }
 
+        public static string GetFlatTypeName(this CppType cppType)
+        {
+            string name = cppType.GetDisplayName();
+            if (cppType is CppClass cppClass && cppClass.TemplateKind == CppTemplateKind.TemplateSpecializedClass)
+            {
+                foreach (var arg in cppClass.TemplateSpecializedArguments)
+                {
+                    name += arg.ArgAsType.GetDisplayName();
+                }
+            }
+            return name;
+        }
+
         public static List<CppClass> GetAllClassesRecursively(this CppCompilation compilation)
         {
             var cppClasses = new List<CppClass>();

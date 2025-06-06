@@ -61,6 +61,13 @@ namespace CppPinvokeGenerator
                 // Header for C types:
                 cFileSb.Append(templateManager.CTypeHeader(cppClass.CHeaderTypeName));
 
+                // Fixup for expanded typenames
+                var cppClassName = cppClass.Name;
+                if (cppClassName != null) // Name will be null in the case of globals
+                {
+                    cppClassName = cppClass.Class.GetFlatTypeName();
+                }
+
                 var csDllImportsSb = new StringBuilder();
                 var csApiSb = new StringBuilder();
                 var allFunctions = new List<CppFunction>();
@@ -97,7 +104,7 @@ namespace CppPinvokeGenerator
                 foreach (CppFunction function in allFunctions)
                 {
                     // Type_MethodName_argsMask
-                    string flatFunctionName = $"{cppClass.Name}_{function.Name}_{function.ParametersMask()}";
+                    string flatFunctionName = $"{cppClassName}_{function.Name}_{function.ParametersMask()}";
 
                     var cfunctionWriter = new FunctionWriter();
                     var dllImportWriter = new FunctionWriter();

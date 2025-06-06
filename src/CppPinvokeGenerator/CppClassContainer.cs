@@ -8,12 +8,18 @@ namespace CppPinvokeGenerator
     {
         public CppClassContainer(CppClass cppClass, params CppClass[] baseCppClasses)
         {
-            Functions = cppClass
+            var funcs = cppClass
                 .Constructors
                 .Concat(cppClass.Functions)
                 .Concat(baseCppClasses.SelectMany(c => c.Constructors))
-                .Concat(baseCppClasses.SelectMany(c => c.Functions))
-                .ToList();
+                .Concat(baseCppClasses.SelectMany(c => c.Functions));
+            if (cppClass.TemplateKind == CppTemplateKind.TemplateSpecializedClass
+                && cppClass.SpecializedTemplate != null)
+            {
+                funcs = funcs.Concat(cppClass.SpecializedTemplate.Functions);
+            }
+
+            Functions = funcs.ToList();
             Class = cppClass;
         }
 
