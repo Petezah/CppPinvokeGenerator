@@ -367,7 +367,7 @@ namespace CppPinvokeGenerator
             return false;
         }
 
-        internal string MapToManagedApiType(CppType nativeType, bool isReturnValue)
+        public string MapToManagedApiType(CppType nativeType, bool isReturnValue)
         {
             string type = nativeType.GetDisplayName();
             if (NeedsFullTypeName(type))

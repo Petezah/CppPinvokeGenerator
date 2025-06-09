@@ -44,27 +44,36 @@ namespace CppPinvokeGenerator.Templates
                 .Replace("%NAMESPACE%", @namespace)
                 .Replace("%CONTENT%", content.Trim('\n', '\r'));
 
-        public string CSharpClass(string className, string nativeClassName, string dllImportsContent, string apiContent, string nativeLibraryPath)
+        public string CSharpClass(string className, string nativeClassName, string dllImportsContent, string apiContent, string nativeLibraryPath, string extraContent = "")
             => GetEmbeddedResource("CSharpClass.txt")
                 .Replace("%CLASS_UNSAFE_SAFE%", csClassUnsafeOrSafe)
                 .Replace("%CLASS_NAME%", className)
                 .Replace("%CCLASS_NAME%", nativeClassName)
                 .Replace("%DLLIMPORTS%", dllImportsContent.Trim('\n', '\r'))
                 .Replace("%API%", apiContent.Trim('\n', '\r'))
-                .Replace("%NATIVE_LIBRARY_PATH%", nativeLibraryPath);
+                .Replace("%NATIVE_LIBRARY_PATH%", nativeLibraryPath)
+                .Replace("%EXTRA%", extraContent);
 
-        public string CSharpGlobalClass(string dllImportsContent, string apiContent, string nativeLibraryPath)
+        public string CSharpGlobalClass(string dllImportsContent, string apiContent, string nativeLibraryPath, string extraContent = "")
             => GetEmbeddedResource("CSharpGlobalClass.txt")
                 .Replace("%CLASS_UNSAFE_SAFE%", csClassUnsafeOrSafe)
                 .Replace("%CLASS_NAME%", csGlobalClass)
                 .Replace("%DLLIMPORTS%", dllImportsContent.Trim('\n', '\r'))
                 .Replace("%API%", apiContent.Trim('\n', '\r'))
-                .Replace("%NATIVE_LIBRARY_PATH%", nativeLibraryPath);
+                .Replace("%NATIVE_LIBRARY_PATH%", nativeLibraryPath)
+                .Replace("%EXTRA%", extraContent);
 
         public string CSharpEnum(string enumName, string enumItems)
             => GetEmbeddedResource("CSharpEnum.txt")
                 .Replace("%ENUM_NAME%", enumName)
                 .Replace("%ITEMS%", enumItems.Trim('\n', '\r'));
+
+        public string CSharpEvent(string eventName, string eventDataName, string eventRegisterFunc, string eventUnregisterFunc)
+            => GetEmbeddedResource("CSharpEvent.txt")
+                .Replace("%EVENTNAME%", eventName)
+                .Replace("%EVENTDATANAME%", eventDataName)
+                .Replace("%EVENTREGISTERFUNC%", eventRegisterFunc)
+                .Replace("%EVENTUNREGISTERFUNC%", eventUnregisterFunc);
 
         private string GetEmbeddedResource(string file)
         {

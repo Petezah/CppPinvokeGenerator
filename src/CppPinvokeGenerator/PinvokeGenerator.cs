@@ -9,6 +9,7 @@ using System.Text;
 using CppAst;
 using CppPinvokeGenerator.Templates;
 using Microsoft.Extensions.Logging;
+using static CppPinvokeGenerator.EventHelper;
 
 namespace CppPinvokeGenerator
 {
@@ -26,7 +27,7 @@ namespace CppPinvokeGenerator
         /// <param name="outCsFilePath">If writing a single file, this will be the name of the file written; if writing multiple files, this should be the path to the directory</param>
         /// <param name="makeCsFilePerClass">True if each individual class should be written to a separate file, False if one file should be written</param>
         /// <param name="csFilenameSuffix">If writing multiple C# files, this suffix will be appended to the class name to make the filename of the C# file</param>
-        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, CallingConvention callingConvention, bool writeProperties, string dllImportPath, string outCFile, string outCsFilePath, bool makeCsFilePerClass, string csFilenameSuffix = "")
+        public static void Generate(TypeMapper mapper, TemplateManager templateManager, string @namespace, CallingConvention callingConvention, bool writeProperties, string dllImportPath, string outCFile, string outCsFilePath, bool makeCsFilePerClass, GetEventClassNamesDelegate getEventClassNames = null, string csFilenameSuffix = "")
         {
             var csFileSb = new StringBuilder();
             var cFileSb = new StringBuilder();
@@ -58,6 +59,8 @@ namespace CppPinvokeGenerator
             var allClasses = mapper.GetAllClasses().ToArray();
             foreach (CppClassContainer cppClass in allClasses)
             {
+                var csFileExtra = new StringBuilder();
+
                 // Header for C types:
                 cFileSb.Append(templateManager.CTypeHeader(cppClass.CHeaderTypeName));
 
@@ -98,6 +101,17 @@ namespace CppPinvokeGenerator
                     continue;
                 }
 
+                var eventHelper = new EventHelper(mapper, cppClass.Class, allFunctions, getEventClassNames);
+                if (eventHelper.CanGenerateEvent)
+                {
+                    csFileExtra.AppendLine(
+                        templateManager.CSharpEvent(
+                            eventHelper.EventName,
+                            eventHelper.EventDataName,
+                            eventHelper.EventRegisterFunc,
+                            eventHelper.EventUnRegisterFunc));
+                }
+
                 var propertyGenerator = new PropertyGenerator();
                 propertyGenerator.RegisterCandidates(mapper, allFunctions);
 
@@ -133,7 +147,7 @@ namespace CppPinvokeGenerator
                         apiFunctionWriter.Private();
                         if (!propertyInfo.WrittenToApi)
                         {
-                            csApiSb.AppendLine(propertyInfo.GenerateProperty().Tabify(2));
+                            csApiSb.AppendLine(propertyInfo.GenerateProperty(cppClass.IsGlobal).Tabify(2));
                         }
                     }
 
@@ -317,7 +331,7 @@ namespace CppPinvokeGenerator
                 }
 
                 if (cppClass.IsGlobal)
-                    csFileSb.Append(templateManager.CSharpGlobalClass(csDllImportsSb.ToString(), csApiSb.ToString(), dllImportPath));
+                    csFileSb.Append(templateManager.CSharpGlobalClass(csDllImportsSb.ToString(), csApiSb.ToString(), dllImportPath, csFileExtra.ToString()));
                 else if (!cppClass.IsGlobal)
                 {
                     var nativeClassName = cppClass.Name;
@@ -326,7 +340,7 @@ namespace CppPinvokeGenerator
                         nativeClassName = cppClass.Class.GetFullTypeName();
                     }
                     nativeClassName = nativeClassName.Replace("<", "_").Replace(">", "_").Replace(",", "_");
-                    csFileSb.Append(templateManager.CSharpClass(mapper.RenameForApi(cppClass.Class.GetFullTypeName(), false), nativeClassName, csDllImportsSb.ToString(), csApiSb.ToString(), dllImportPath));
+                    csFileSb.Append(templateManager.CSharpClass(mapper.RenameForApi(cppClass.Class.GetFullTypeName(), false), nativeClassName, csDllImportsSb.ToString(), csApiSb.ToString(), dllImportPath, csFileExtra.ToString()));
 
                     // Append "delete" method:
                     // EXPORTS(void) %class%_delete(%class%* target) { if (target) delete target; }

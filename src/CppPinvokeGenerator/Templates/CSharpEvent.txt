@@ -1,0 +1,58 @@
+
+        #region Event
+        private %EVENTNAME%Delegate _delegate;
+        private bool _callbackInitialized = false;
+        private uint _callbackHandle;
+
+        private event EventHandler<%EVENTDATANAME%> _fired; 
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        internal delegate void %EVENTNAME%Delegate(IntPtr arg);
+
+        private void InitializeCallback()
+        {
+            if (_delegate == null)
+            {
+                _delegate = new %EVENTNAME%Delegate(Callback);
+            }
+
+            if (!_callbackInitialized)
+            {
+                _callbackHandle = %EVENTREGISTERFUNC%(Marshal.GetFunctionPointerForDelegate(_delegate));
+                _callbackInitialized = true;
+            }
+        }
+
+        private void UnInitializeCallback()
+        {
+            if (_callbackInitialized)
+            {
+                %EVENTUNREGISTERFUNC%(_callbackHandle);
+                _callbackInitialized = false;
+            }
+        }
+
+        private void Callback(IntPtr arg) // %EVENTDATANAME%
+        {
+            %EVENTDATANAME% realArg = new %EVENTDATANAME%(arg, false);
+            _fired?.Invoke(this, realArg);
+        }
+
+        public event EventHandler<%EVENTDATANAME%> Fired
+        {
+            add
+            {
+                InitializeCallback();
+                _fired += value;
+            }
+            remove
+            {
+                _fired -= value;
+                if(_fired == null)
+                {
+                    UnInitializeCallback();
+                }
+            }
+
+        }
+        #endregion

@@ -3,7 +3,7 @@
         #region API
 %API%
         #endregion
-
+%EXTRA%
         #region DllImports
 %DLLIMPORTS%
         #endregion

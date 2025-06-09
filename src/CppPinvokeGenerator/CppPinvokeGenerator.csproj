@@ -21,11 +21,13 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Templates\CSharpEnum.txt" />
+    <None Remove="Templates\CSharpEvent.txt" />
     <None Remove="Templates\CSharpGlobalClass.txt" />
     <None Remove="Templates\CTypeHeader.txt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Templates\CSharpEnum.txt" />
+    <EmbeddedResource Include="Templates\CSharpEvent.txt" />
     <EmbeddedResource Include="Templates\CSharpGlobalClass.txt" />
     <EmbeddedResource Include="Templates\CSharpClass.txt" />
     <EmbeddedResource Include="Templates\CSharpHeader.txt" />

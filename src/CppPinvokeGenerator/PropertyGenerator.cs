@@ -58,13 +58,13 @@ namespace CppPinvokeGenerator
         public string SetterApiName { get; set; }
         public bool WrittenToApi { get; private set; } = false;
 
-        public string GenerateProperty()
+        public string GenerateProperty(bool isGlobal)
         {
             // TODO: use FunctionWriter here
             // TODO: comments
             WrittenToApi = true;
             string type = _mapper.MapToManagedApiType(GetterFunction.ReturnType, isReturnValue: true);
-            string modifier = GetterFunction.IsStatic() ? "static " : "";
+            string modifier = GetterFunction.IsStatic() || isGlobal ? "static " : "";
             StringBuilder builder = new StringBuilder();
             if (SetterFunction == null)
             {
